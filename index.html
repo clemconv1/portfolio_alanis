@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Alanis Cano</title>
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;1,400&family=Jost:wght@300;400&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--bg:#F8F6F2;--text:#1A1A18;--muted:#888880;--border:#E0DDD7}
+    @font-face{font-family:'Steriliser';src:url('Steriliser.otf') format('opentype');font-weight:400;font-style:normal;font-display:swap}
+    html{scroll-behavior:smooth}
+    body{background:var(--bg);color:var(--text);font-family:'Jost',sans-serif;font-weight:300;overflow-x:hidden}
+
+    nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;justify-content:space-between;align-items:center;padding:1.2rem 2rem}
+    .nav-name{font-family:'Steriliser',sans-serif;font-size:2rem;letter-spacing:.16em;text-decoration:none;color:var(--text);padding:2px 6px;transition:color .35s ease}
+    .nav-menu{display:flex;gap:1.6rem;list-style:none}
+    .nav-menu a{font-size:.7rem;letter-spacing:.13em;text-transform:uppercase;text-decoration:none;color:var(--muted);transition:color .35s ease;padding:2px 4px}
+    .nav-menu a:hover,.nav-menu a.active{color:var(--text)}
+
+    /* Nav over image — white mode */
+    nav.nav-over-image .nav-name{color:#fff}
+    nav.nav-over-image .nav-menu a{color:rgba(255,255,255,.6)}
+    nav.nav-over-image .nav-menu a:hover,nav.nav-over-image .nav-menu a.active{color:#fff}
+
+    .page{display:none}
+    .page.active{display:block}
+    #projets-page{padding-top:0;padding-bottom:120px}
+
+    /* ── GIF STRIP ── */
+    .gif-strip{
+      position:relative;
+      width:100%;
+      margin-bottom:32px;
+      overflow:hidden;
+      height:calc(42vw * 10 / 16);
+    }
+    .gif-track{
+      display:flex;
+      gap:6px;
+      height:100%;
+      will-change:transform;
+    }
+    .gif-track img{
+      height:100%;
+      object-fit:cover;
+      flex-shrink:0;
+      display:block;
+    }
+
+    .cascade{position:relative}
+
+    /* ── ITEM LAYOUT ── */
+    .cascade-item{
+      position:relative;
+      margin-bottom:32px;
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    .cascade-item[data-pos="0"]{width:42%;margin-left:1%}
+    .cascade-item[data-pos="1"]{width:50%;margin-left:18%}
+    .cascade-item[data-pos="2"]{width:46%;margin-left:44%}
+
+    /* ── CLIP REVEAL (lateral) ── */
+    .item-link{
+      display:block;
+      text-decoration:none;
+      position:relative;
+      overflow:hidden;
+      flex-shrink:0;
+      width:100%;
+      clip-path:inset(0 100% 0 0);
+      transition:clip-path 0.75s cubic-bezier(0.77,0,0.18,1);
+    }
+
+    /* pos=2: reveals right to left */
+    .cascade-item[data-pos="2"] .item-link{
+      clip-path:inset(0 0 0 100%);
+    }
+
+    /* color block overlay */
+    .item-link::before{
+      content:'';
+      position:absolute;
+      inset:0;
+      background:#1A9E8F;
+      z-index:2;
+      opacity:1;
+      transition:opacity 0.6s ease 0.55s;
+    }
+    .item-link.revealed::before{
+      opacity:0;
+    }
+
+    .item-link.revealed{
+      clip-path:inset(0 0% 0 0) !important;
+    }
+
+    .item-link svg,
+    .item-link img{
+      width:100%;
+      aspect-ratio:16/10;
+      object-fit:cover;
+      display:block;
+      transform:scaleX(1.08); /* slightly wider for internal Ken Burns effect */
+      transition:transform 0.85s cubic-bezier(0.77,0,0.18,1), filter 0.3s ease;
+      filter:saturate(.88);
+      transform-origin:left center;
+    }
+    .cascade-item[data-pos="2"] .item-link svg,
+    .cascade-item[data-pos="2"] .item-link img{
+      transform-origin:right center;
+    }
+    .item-link.revealed svg,
+    .item-link.revealed img{
+      transform:scaleX(1);
+      filter:saturate(.95);
+    }
+
+    /* hover */
+    .item-link:hover svg,
+    .item-link:hover img{filter:saturate(1.05)}
+
+    /* overlay */
+    .item-overlay{position:absolute;inset:0;background:rgba(8,8,6,.34);opacity:0;transition:opacity .25s ease;display:flex;flex-direction:column;justify-content:flex-end;padding:.9rem 1rem;pointer-events:none}
+    .item-link:hover .item-overlay{opacity:1}
+    .overlay-title{font-family:'EB Garamond',serif;font-size:.95rem;color:#fff;margin-bottom:.18rem}
+    .overlay-role{font-size:.56rem;letter-spacing:.13em;text-transform:uppercase;color:rgba(255,255,255,.6)}
+
+    .play-btn{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(.8);width:38px;height:38px;border:1px solid rgba(255,255,255,.8);border-radius:50%;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .25s ease,transform .25s ease;pointer-events:none}
+    .item-link:hover .play-btn{opacity:1;transform:translate(-50%,-50%) scale(1)}
+
+    /* caption */
+    .item-caption{order:-1;padding-bottom:0;opacity:0;transition:opacity 0.6s ease 0.5s}
+    .item-link.revealed ~ .item-caption{opacity:1}
+    .caption-title{font-family:'EB Garamond',serif;font-size:.95rem;font-style:italic;line-height:1.35;color:var(--text);margin-bottom:.4rem}
+    .caption-desc{font-size:.65rem;letter-spacing:.08em;line-height:1.7;color:var(--muted)}
+    .caption-year{display:block;font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:var(--border);margin-top:.5rem}
+
+    /* ── ABOUT ── */
+    #about-page{padding-top:100px;padding-bottom:80px;max-width:900px;margin:0 auto;padding-left:2rem;padding-right:2rem}
+    #about-page .inner{display:grid;grid-template-columns:1fr 1.5fr;gap:4rem;align-items:start}
+    .about-img{aspect-ratio:3/4;overflow:hidden;background:var(--border)}
+    .about-img img,.about-img svg{width:100%;height:100%;object-fit:cover;filter:saturate(.85);display:block}
+    .about-content h2{font-family:'EB Garamond',serif;font-size:2rem;font-weight:400;margin-bottom:.3rem}
+    .about-content .role{font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:2rem}
+    .about-content p{font-size:.87rem;line-height:1.9;color:#555;margin-bottom:1rem}
+    .about-content a{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text);text-decoration:none;border-bottom:1px solid var(--border);padding-bottom:1px}
+
+    #contact-page{padding-top:120px;min-height:60vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding-left:2rem;padding-right:2rem}
+    #contact-page h2{font-family:'EB Garamond',serif;font-size:2.4rem;font-weight:400;margin-bottom:2rem}
+    #contact-page p{font-size:.85rem;color:var(--muted);line-height:2.2}
+    #contact-page a{color:var(--text);text-decoration:none;border-bottom:1px solid var(--border)}
+
+    footer{padding:1.5rem 2rem;font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);display:flex;justify-content:space-between}
+
+    @media(max-width:900px){
+      .cascade-item[data-pos="0"],.cascade-item[data-pos="1"],.cascade-item[data-pos="2"]{width:80%}
+      .cascade-item[data-pos="0"]{margin-left:2%}.cascade-item[data-pos="1"]{margin-left:10%}.cascade-item[data-pos="2"]{margin-left:18%}
+      #about-page .inner{grid-template-columns:1fr}
+    }
+    @media(max-width:560px){
+      .cascade-item[data-pos="0"],.cascade-item[data-pos="1"],.cascade-item[data-pos="2"]{width:92%;margin-left:4%!important}
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="#" class="nav-name" onclick="return showPage('projets')">Alanis Cano</a>
+  <ul class="nav-menu">
+    <li><a href="#" class="active" id="nav-projets" onclick="return showPage('projets')">Projets</a></li>
+    <li><a href="#" id="nav-about" onclick="return showPage('about')">À propos</a></li>
+    <li><a href="#" id="nav-contact" onclick="return showPage('contact')">Contact</a></li>
+  </ul>
+</nav>
+
+<main id="projets-page" class="page active">
+
+<div class="cascade">
+
+  <div class="gif-strip">
+    <div class="gif-track">
+      <img src="gifs/KONBINIgif1.gif" alt="Projet 1"/>
+      <img src="gifs/KONBINIgif2.gif" alt="Projet 2"/>
+      <img src="gifs/KONBINIgirf3.gif" alt="Projet 3"/>
+      <img src="gifs/KONBINIgif4.gif" alt="Projet 4"/>
+      <img src="gifs/KONBINIgif5.gif" alt="Projet 5"/>
+      <img src="gifs/KONBINIgif6.gif" alt="Projet 6"/>
+      <img src="gifs/KONBINIgif8.gif" alt="Projet 7"/>
+      <img src="gifs/KONBINIgif9.gif" alt="Projet 8"/>
+      <img src="gifs/KONBINIgif10.gif" alt="Projet 9"/>
+    </div>
+  </div>
+
+  <!-- 1 pos=0 left -->
+  <div class="cascade-item" data-pos="0">
+    <a class="item-link" href="https://vimeo.com/XXXXXXX" target="_blank" rel="noopener">
+      <svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" style="aspect-ratio:16/10;width:100%">
+        <rect width="800" height="500" fill="#1C1A17"/>
+        <defs><radialGradient id="g1" cx="30%" cy="40%" r="70%"><stop offset="0%" stop-color="#C4441A" stop-opacity=".6"/><stop offset="100%" stop-color="#1C1A17" stop-opacity="0"/></radialGradient></defs>
+        <rect width="800" height="500" fill="url(#g1)"/>
+        <rect x="80" y="120" width="260" height="180" rx="2" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="1"/>
+        <circle cx="210" cy="210" r="28" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="1"/>
+        <text x="80" y="340" font-family="serif" font-size="11" fill="rgba(255,255,255,.18)" letter-spacing="3">PLATEAU — JOUR 3</text>
+      </svg>
+      <div class="play-btn"><svg width="9" height="11" viewBox="0 0 9 11" fill="none"><path d="M1 1L8 5.5L1 10V1Z" fill="white"/></svg></div>
+      <div class="item-overlay"><p class="overlay-title">Adidas x Street Culture</p><p class="overlay-role">Assistante de prod. · 2024</p></div>
+    </a>
+    <div class="item-caption">
+      <p class="caption-title">Une pub tournée en 3 jours à Paris</p>
+      <p class="caption-desc">Coordination logistique · 12 comédiens · 2 lieux</p>
+      <span class="caption-year">2024</span>
+    </div>
+  </div>
+
+  <!-- 2 pos=1 center -->
+  <div class="cascade-item" data-pos="1">
+    <a class="item-link" href="https://vimeo.com/XXXXXXX" target="_blank" rel="noopener">
+      <svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" style="aspect-ratio:16/10;width:100%">
+        <rect width="800" height="500" fill="#12201A"/>
+        <defs><radialGradient id="g2" cx="65%" cy="35%" r="65%"><stop offset="0%" stop-color="#1D9E75" stop-opacity=".55"/><stop offset="100%" stop-color="#12201A" stop-opacity="0"/></radialGradient></defs>
+        <rect width="800" height="500" fill="url(#g2)"/>
+        <rect x="200" y="80" width="400" height="300" rx="1" fill="rgba(255,255,255,.03)" stroke="rgba(255,255,255,.08)" stroke-width="1"/>
+        <circle cx="640" cy="100" r="30" fill="rgba(255,220,100,.08)" stroke="rgba(255,220,100,.15)" stroke-width="1"/>
+        <text x="200" y="430" font-family="serif" font-size="11" fill="rgba(255,255,255,.15)" letter-spacing="3">TOURNAGE — EXTÉRIEUR NUIT</text>
+      </svg>
+      <div class="play-btn"><svg width="9" height="11" viewBox="0 0 9 11" fill="none"><path d="M1 1L8 5.5L1 10V1Z" fill="white"/></svg></div>
+      <div class="item-overlay"><p class="overlay-title">Court Métrage — Rive Gauche</p><p class="overlay-role">Régie · 2024</p></div>
+    </a>
+    <div class="item-caption">
+      <p class="caption-title">Fiction courte sélectionnée à Clermont-Ferrand</p>
+      <p class="caption-desc">Régie générale · budget 40k€</p>
+      <span class="caption-year">2024</span>
+    </div>
+  </div>
+
+  <!-- 3 pos=2 right -->
+  <div class="cascade-item" data-pos="2">
+    <a class="item-link" href="https://vimeo.com/XXXXXXX" target="_blank" rel="noopener">
+      <svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" style="aspect-ratio:16/10;width:100%">
+        <rect width="800" height="500" fill="#1A1520"/>
+        <defs><radialGradient id="g3" cx="70%" cy="60%" r="70%"><stop offset="0%" stop-color="#534AB7" stop-opacity=".6"/><stop offset="100%" stop-color="#1A1520" stop-opacity="0"/></radialGradient></defs>
+        <rect width="800" height="500" fill="url(#g3)"/>
+        <rect x="50" y="150" width="700" height="200" rx="0" fill="rgba(255,255,255,.03)"/>
+        <text x="50" y="430" font-family="serif" font-size="11" fill="rgba(255,255,255,.14)" letter-spacing="3">SÉRIE — ÉPISODE 4</text>
+      </svg>
+      <div class="play-btn"><svg width="9" height="11" viewBox="0 0 9 11" fill="none"><path d="M1 1L8 5.5L1 10V1Z" fill="white"/></svg></div>
+      <div class="item-overlay"><p class="overlay-title">Série — Les Invisibles</p><p class="overlay-role">Assistante de prod. · 2023</p></div>
+    </a>
+    <div class="item-caption">
+      <p class="caption-title">Série 6 épisodes pour France TV</p>
+      <p class="caption-desc">Prépa + tournage · 8 semaines</p>
+      <span class="caption-year">2023</span>
+    </div>
+  </div>
+
+  <!-- 4 pos=1 center -->
+  <div class="cascade-item" data-pos="1">
+    <a class="item-link" href="https://vimeo.com/XXXXXXX" target="_blank" rel="noopener">
+      <svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" style="aspect-ratio:16/10;width:100%">
+        <rect width="800" height="500" fill="#1F1510"/>
+        <defs><radialGradient id="g4" cx="20%" cy="70%" r="75%"><stop offset="0%" stop-color="#BA7517" stop-opacity=".65"/><stop offset="100%" stop-color="#1F1510" stop-opacity="0"/></radialGradient></defs>
+        <rect width="800" height="500" fill="url(#g4)"/>
+        <rect x="160" y="60" width="500" height="380" rx="1" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="1"/>
+        <text x="160" y="470" font-family="serif" font-size="11" fill="rgba(255,255,255,.13)" letter-spacing="3">CLIP — STUDIO B</text>
+      </svg>
+      <div class="play-btn"><svg width="9" height="11" viewBox="0 0 9 11" fill="none"><path d="M1 1L8 5.5L1 10V1Z" fill="white"/></svg></div>
+      <div class="item-overlay"><p class="overlay-title">Clip — Nour &amp; Cali</p><p class="overlay-role">Assistante de prod. · 2023</p></div>
+    </a>
+    <div class="item-caption">
+      <p class="caption-title">Clip musical tourné en studio à Montreuil</p>
+      <p class="caption-desc">Casting · décors · coordination artistes</p>
+      <span class="caption-year">2023</span>
+    </div>
+  </div>
+
+  <!-- 5 pos=0 left -->
+  <div class="cascade-item" data-pos="0">
+    <a class="item-link" href="https://vimeo.com/XXXXXXX" target="_blank" rel="noopener">
+      <svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" style="aspect-ratio:16/10;width:100%">
+        <rect width="800" height="500" fill="#0E1A1A"/>
+        <defs><radialGradient id="g5" cx="50%" cy="50%" r="60%"><stop offset="0%" stop-color="#0F6E56" stop-opacity=".7"/><stop offset="100%" stop-color="#0E1A1A" stop-opacity="0"/></radialGradient></defs>
+        <rect width="800" height="500" fill="url(#g5)"/>
+        <circle cx="400" cy="250" r="120" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="1"/>
+        <circle cx="400" cy="250" r="80" fill="none" stroke="rgba(255,255,255,.05)" stroke-width="1"/>
+        <text x="60" y="460" font-family="serif" font-size="11" fill="rgba(255,255,255,.13)" letter-spacing="3">DOCUMENTAIRE — JOUR 1</text>
+      </svg>
+      <div class="play-btn"><svg width="9" height="11" viewBox="0 0 9 11" fill="none"><path d="M1 1L8 5.5L1 10V1Z" fill="white"/></svg></div>
+      <div class="item-overlay"><p class="overlay-title">Documentaire — Lumière</p><p class="overlay-role">Stagiaire prod. · 2022</p></div>
+    </a>
+    <div class="item-caption">
+      <p class="caption-title">Docu sur l'artisanat français, diffusé sur Arte</p>
+      <p class="caption-desc">Recherche · logistique · 4 semaines</p>
+      <span class="caption-year">2022</span>
+    </div>
+  </div>
+
+  <!-- 6 pos=1 center -->
+  <div class="cascade-item" data-pos="1">
+    <a class="item-link" href="https://vimeo.com/XXXXXXX" target="_blank" rel="noopener">
+      <svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" style="aspect-ratio:16/10;width:100%">
+        <rect width="800" height="500" fill="#1A0E12"/>
+        <defs><radialGradient id="g6" cx="55%" cy="45%" r="65%"><stop offset="0%" stop-color="#993556" stop-opacity=".6"/><stop offset="100%" stop-color="#1A0E12" stop-opacity="0"/></radialGradient></defs>
+        <rect width="800" height="500" fill="url(#g6)"/>
+        <rect x="100" y="100" width="600" height="300" fill="rgba(255,255,255,.02)" stroke="rgba(255,255,255,.06)" stroke-width="1"/>
+        <text x="100" y="440" font-family="serif" font-size="11" fill="rgba(255,255,255,.13)" letter-spacing="3">PUB — BEAUTÉ</text>
+      </svg>
+      <div class="play-btn"><svg width="9" height="11" viewBox="0 0 9 11" fill="none"><path d="M1 1L8 5.5L1 10V1Z" fill="white"/></svg></div>
+      <div class="item-overlay"><p class="overlay-title">Pub — Maison Camélia</p><p class="overlay-role">Régie · 2022</p></div>
+    </a>
+    <div class="item-caption">
+      <p class="caption-title">Spot TV pour une marque de cosmétiques</p>
+      <p class="caption-desc">Plateau studio · gestion figurants</p>
+      <span class="caption-year">2022</span>
+    </div>
+  </div>
+
+  <!-- 7 pos=2 right -->
+  <div class="cascade-item" data-pos="2">
+    <a class="item-link" href="https://vimeo.com/XXXXXXX" target="_blank" rel="noopener">
+      <svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" style="aspect-ratio:16/10;width:100%">
+        <rect width="800" height="500" fill="#101418"/>
+        <defs><radialGradient id="g7" cx="40%" cy="55%" r="70%"><stop offset="0%" stop-color="#185FA5" stop-opacity=".55"/><stop offset="100%" stop-color="#101418" stop-opacity="0"/></radialGradient></defs>
+        <rect width="800" height="500" fill="url(#g7)"/>
+        <rect x="300" y="100" width="200" height="300" fill="rgba(255,255,255,.03)"/>
+        <text x="50" y="460" font-family="serif" font-size="11" fill="rgba(255,255,255,.13)" letter-spacing="3">FESTIVAL — AVANT-PREMIÈRE</text>
+      </svg>
+      <div class="play-btn"><svg width="9" height="11" viewBox="0 0 9 11" fill="none"><path d="M1 1L8 5.5L1 10V1Z" fill="white"/></svg></div>
+      <div class="item-overlay"><p class="overlay-title">Festival — Court en Scène</p><p class="overlay-role">Assistante de prod. · 2022</p></div>
+    </a>
+    <div class="item-caption">
+      <p class="caption-title">Organisation d'un festival de courts métrages</p>
+      <p class="caption-desc">Accréditations · programmation · 3 jours</p>
+      <span class="caption-year">2022</span>
+    </div>
+  </div>
+
+  <!-- 8 pos=1 center -->
+  <div class="cascade-item" data-pos="1">
+    <a class="item-link" href="https://vimeo.com/XXXXXXX" target="_blank" rel="noopener">
+      <svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" style="aspect-ratio:16/10;width:100%">
+        <rect width="800" height="500" fill="#181714"/>
+        <defs><radialGradient id="g8" cx="75%" cy="30%" r="65%"><stop offset="0%" stop-color="#C4441A" stop-opacity=".45"/><stop offset="100%" stop-color="#181714" stop-opacity="0"/></radialGradient></defs>
+        <rect width="800" height="500" fill="url(#g8)"/>
+        <rect x="60" y="80" width="680" height="380" fill="none" stroke="rgba(255,255,255,.05)" stroke-width="1"/>
+        <text x="60" y="488" font-family="serif" font-size="11" fill="rgba(255,255,255,.13)" letter-spacing="3">LONG MÉTRAGE — TOURNAGE FINAL</text>
+      </svg>
+      <div class="play-btn"><svg width="9" height="11" viewBox="0 0 9 11" fill="none"><path d="M1 1L8 5.5L1 10V1Z" fill="white"/></svg></div>
+      <div class="item-overlay"><p class="overlay-title">Long Métrage — Avant l'Aube</p><p class="overlay-role">Assistante de prod. · 2021</p></div>
+    </a>
+    <div class="item-caption">
+      <p class="caption-title">Premier long de la réalisatrice Inès Moreau</p>
+      <p class="caption-desc">6 semaines de tournage · région PACA</p>
+      <span class="caption-year">2021</span>
+    </div>
+  </div>
+
+  <!-- 9 pos=0 left -->
+  <div class="cascade-item" data-pos="0">
+    <a class="item-link" href="https://vimeo.com/XXXXXXX" target="_blank" rel="noopener">
+      <svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" style="aspect-ratio:16/10;width:100%">
+        <rect width="800" height="500" fill="#141414"/>
+        <defs><radialGradient id="g9" cx="50%" cy="80%" r="60%"><stop offset="0%" stop-color="#3B6D11" stop-opacity=".55"/><stop offset="100%" stop-color="#141414" stop-opacity="0"/></radialGradient></defs>
+        <rect width="800" height="500" fill="url(#g9)"/>
+        <line x1="100" y1="0" x2="100" y2="500" stroke="rgba(255,255,255,.04)" stroke-width="1"/>
+        <line x1="700" y1="0" x2="700" y2="500" stroke="rgba(255,255,255,.04)" stroke-width="1"/>
+        <text x="100" y="460" font-family="serif" font-size="11" fill="rgba(255,255,255,.14)" letter-spacing="3">INSTITUTIONNEL — CNRS</text>
+      </svg>
+      <div class="play-btn"><svg width="9" height="11" viewBox="0 0 9 11" fill="none"><path d="M1 1L8 5.5L1 10V1Z" fill="white"/></svg></div>
+      <div class="item-overlay"><p class="overlay-title">Institutionnel — CNRS</p><p class="overlay-role">Régie · 2021</p></div>
+    </a>
+    <div class="item-caption">
+      <p class="caption-title">Film institutionnel pour la recherche publique</p>
+      <p class="caption-desc">Tournage sur 3 sites · interviews experts</p>
+      <span class="caption-year">2021</span>
+    </div>
+  </div>
+
+</div>
+</main>
+
+<!-- ABOUT -->
+<section id="about-page" class="page">
+  <div class="inner">
+    <div class="about-img">
+      <svg viewBox="0 0 400 533" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;height:100%">
+        <rect width="400" height="533" fill="#1C1A17"/>
+        <defs><radialGradient id="gp" cx="40%" cy="35%" r="70%"><stop offset="0%" stop-color="#C4441A" stop-opacity=".4"/><stop offset="100%" stop-color="#1C1A17" stop-opacity="0"/></radialGradient></defs>
+        <rect width="400" height="533" fill="url(#gp)"/>
+        <circle cx="200" cy="200" r="70" fill="rgba(255,255,255,.06)" stroke="rgba(255,255,255,.1)" stroke-width="1"/>
+        <text x="200" y="205" font-family="serif" font-size="13" fill="rgba(255,255,255,.2)" text-anchor="middle" letter-spacing="2">PHOTO</text>
+      </svg>
+    </div>
+    <div class="about-content">
+      <h2>Alanis Cano</h2>
+      <p class="role">Assistante de production · Paris</p>
+      <p>Diplômée de [École], je travaille sur des projets cinéma, publicitaires et institutionnels depuis X ans. Rigoureuse et passionnée par la logistique de tournage, je m'adapte aux contraintes de chaque production.</p>
+      <p>J'ai collaboré avec [sociétés / réalisateurs] sur des projets diffusés sur [plateformes / festivals].</p>
+      <p style="margin-top:1.5rem"><a href="mailto:alanis@email.com">alanis@email.com</a></p>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact-page" class="page">
+  <h2>Travaillons ensemble.</h2>
+  <p>
+    <a href="mailto:alanis@email.com">alanis@email.com</a><br/>
+    <a href="tel:+33600000000">+33 6 00 00 00 00</a><br/>
+    <a href="https://www.linkedin.com/in/alanis-cano-arenas" target="_blank">LinkedIn</a>
+  </p>
+</section>
+
+<footer>
+  <span>© 2026 Alanis Cano</span>
+  <span>Paris</span>
+</footer>
+
+<script>
+  function showPage(name) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-menu a').forEach(a => a.classList.remove('active'));
+    const page = document.getElementById(name + '-page');
+    if (page) page.classList.add('active');
+    const nav = document.getElementById('nav-' + name);
+    if (nav) nav.classList.add('active');
+    window.scrollTo(0, 0);
+    if (name === 'projets') setTimeout(() => { checkReveal(); checkNavOverImage(); }, 50);
+    else document.querySelector('nav').classList.remove('nav-over-image');
+    return false;
+  }
+
+  // ── GIF STRIP: auto-scroll + scroll acceleration ──
+  // Duplicate images in the first track for seamless loop
+  const firstTrack = document.querySelector('.gif-track');
+  const gifTrackOriginalHTML = firstTrack.innerHTML;
+  firstTrack.insertAdjacentHTML('beforeend', gifTrackOriginalHTML);
+
+  let offset = 0;
+  const baseSpeed = 0.5; // px per frame
+  let scrollBoost = 0;
+
+  function animateStrip() {
+    offset += baseSpeed + scrollBoost;
+    const halfWidth = firstTrack.scrollWidth / 2;
+    if (offset >= halfWidth) offset -= halfWidth;
+    if (offset < 0) offset += halfWidth;
+    // Apply transform to ALL gif-tracks (including cloned ones)
+    document.querySelectorAll('.gif-track').forEach(t => {
+      t.style.transform = 'translateX(' + (-offset) + 'px)';
+    });
+    scrollBoost *= 0.95;
+    if (Math.abs(scrollBoost) < 0.01) scrollBoost = 0;
+    requestAnimationFrame(animateStrip);
+  }
+
+  // Wheel on any strip: horizontal scroll accelerates GIFs, vertical passes through
+  document.addEventListener('wheel', (e) => {
+    if (e.target.closest('.gif-strip') && Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+      e.preventDefault();
+      scrollBoost += e.deltaX * 0.15;
+    }
+  }, { passive: false });
+
+  // ── CASCADE: reveal + nav color + infinite scroll ──
+  function checkReveal() {
+    const links = document.querySelectorAll('#projets-page .item-link');
+    const winH = window.innerHeight;
+    links.forEach(link => {
+      const rect = link.getBoundingClientRect();
+      const triggerTop = rect.top < winH * 0.85;
+      const triggerBottom = rect.bottom > 0;
+      const shouldReveal = triggerTop && triggerBottom;
+      if (shouldReveal && !link.classList.contains('revealed')) {
+        link.classList.add('revealed');
+      } else if (!shouldReveal && link.classList.contains('revealed')) {
+        link.classList.remove('revealed');
+      }
+    });
+  }
+
+  function checkNavOverImage() {
+    const navName = document.querySelector('.nav-name');
+    const navRect = navName.getBoundingClientRect();
+    const images = document.querySelectorAll('#projets-page .item-link');
+    let over = false;
+
+    // Check GIF strips overlap
+    document.querySelectorAll('.gif-strip').forEach(s => {
+      const sr = s.getBoundingClientRect();
+      if (sr.top < navRect.bottom && sr.bottom > navRect.top) over = true;
+    });
+    // Check cascade images overlap
+    images.forEach(link => {
+      const rect = link.getBoundingClientRect();
+      const overlapV = rect.top < navRect.bottom && rect.bottom > navRect.top;
+      const overlapH = rect.left < navRect.right && rect.right > navRect.left;
+      if (overlapV && overlapH) over = true;
+    });
+
+    document.querySelector('nav').classList.toggle('nav-over-image', over);
+  }
+
+  // Infinite scroll
+  const cascade = document.querySelector('.cascade');
+  const gifStripHTML = cascade.querySelector('.gif-strip').outerHTML;
+  const originalItemsHTML = Array.from(cascade.querySelectorAll('.cascade-item')).map(el => el.outerHTML);
+  const posPattern = [0, 1, 2, 1];
+  let totalItems = originalItemsHTML.length;
+  let cloneCount = 0;
+
+  function appendClones() {
+    cloneCount++;
+    const suffix = '_' + cloneCount;
+    // Append GIF strip clone (duplicate track images for seamless loop)
+    const clonedStrip = gifStripHTML.replace('<div class="gif-track">', '<div class="gif-track">');
+    cascade.insertAdjacentHTML('beforeend', clonedStrip);
+    // Duplicate images inside the newly added track
+    const allTracks = cascade.querySelectorAll('.gif-track');
+    const newTrack = allTracks[allTracks.length - 1];
+    newTrack.insertAdjacentHTML('beforeend', gifTrackOriginalHTML);
+
+    // Append cascade items
+    originalItemsHTML.forEach((html, i) => {
+      const pos = posPattern[(totalItems + i) % posPattern.length];
+      const updated = html
+        .replace(/data-pos="\d+"/, 'data-pos="' + pos + '"')
+        .replace(/id="(g\d+)"/g, 'id="$1' + suffix + '"')
+        .replace(/url\(#(g\d+)\)/g, 'url(#$1' + suffix + ')');
+      cascade.insertAdjacentHTML('beforeend', updated);
+    });
+    totalItems += originalItemsHTML.length;
+  }
+
+  function checkInfiniteScroll() {
+    if (!document.getElementById('projets-page').classList.contains('active')) return;
+    const rect = cascade.getBoundingClientRect();
+    const distanceToBottom = rect.bottom - window.innerHeight;
+    if (distanceToBottom < 500) appendClones();
+  }
+
+  // Scroll listener
+  let ticking = false;
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      requestAnimationFrame(() => {
+        checkReveal();
+        checkNavOverImage();
+        checkInfiniteScroll();
+        ticking = false;
+      });
+      ticking = true;
+    }
+  }, { passive: true });
+
+  // Initial check on load
+  window.addEventListener('load', () => {
+    checkReveal();
+    checkNavOverImage();
+    animateStrip();
+  });
+  checkReveal();
+  checkNavOverImage();
+</script>
+</body>
+</html>
