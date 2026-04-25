@@ -185,26 +185,21 @@
     .caption-year{display:block;font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:var(--border);margin-top:.5rem}
 
     /* ── ABOUT ── */
-    #about-page{padding-top:100px;padding-bottom:80px;max-width:900px;margin:0 auto;padding-left:2rem;padding-right:2rem}
-    #about-page .inner{display:grid;grid-template-columns:1fr 1.5fr;gap:4rem;align-items:start}
-    .about-img{aspect-ratio:3/4;overflow:hidden;background:var(--border)}
-    .about-img img,.about-img svg{width:100%;height:100%;object-fit:cover;filter:saturate(.85);display:block}
-    .about-content h2{font-family:'EB Garamond',serif;font-size:2rem;font-weight:400;margin-bottom:.3rem}
-    .about-content .role{font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:2rem}
-    .about-content p{font-size:.87rem;line-height:1.9;color:#555;margin-bottom:1rem}
-    .about-content a{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text);text-decoration:none;border-bottom:1px solid var(--border);padding-bottom:1px}
+    #about-page{background:#65cfbc;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:120px 2rem 80px}
+    .about-photo{width:240px;display:block}
+    .about-text{max-width:480px;text-align:center;margin-top:2.5rem;font-size:.85rem;line-height:1.9;color:rgba(255,255,255,.85)}
 
-    #contact-page{padding-top:120px;min-height:60vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding-left:2rem;padding-right:2rem}
-    #contact-page h2{font-family:'EB Garamond',serif;font-size:2.4rem;font-weight:400;margin-bottom:2rem}
-    #contact-page p{font-size:.85rem;color:var(--muted);line-height:2.2}
-    #contact-page a{color:var(--text);text-decoration:none;border-bottom:1px solid var(--border)}
+    #contact-page{padding-top:120px;min-height:60vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding-left:2rem;padding-right:2rem;background:#65cfbc}
+    #contact-page h2{font-family:'EB Garamond',serif;font-size:2.4rem;font-weight:400;margin-bottom:2rem;color:#fff}
+    #contact-page p{font-size:.85rem;color:rgba(255,255,255,.85);line-height:2.2}
+    #contact-page a{color:#fff;text-decoration:none;border-bottom:1px solid rgba(255,255,255,.4)}
 
-    footer{padding:1.5rem 2rem;font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);display:flex;justify-content:space-between}
+    footer{padding:1.5rem 2rem;font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.6);display:flex;justify-content:space-between;background:#65cfbc}
 
     @media(max-width:900px){
       .cascade-item[data-pos="0"],.cascade-item[data-pos="1"],.cascade-item[data-pos="2"]{width:80%}
       .cascade-item[data-pos="0"]{margin-left:2%}.cascade-item[data-pos="1"]{margin-left:10%}.cascade-item[data-pos="2"]{margin-left:18%}
-      #about-page .inner{grid-template-columns:1fr}
+      .about-photo{width:180px}
     }
     @media(max-width:560px){
       .cascade-item[data-pos="0"],.cascade-item[data-pos="1"],.cascade-item[data-pos="2"]{width:92%;margin-left:4%!important}
@@ -443,24 +438,8 @@
 
 <!-- ABOUT -->
 <section id="about-page" class="page">
-  <div class="inner">
-    <div class="about-img">
-      <svg viewBox="0 0 400 533" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;height:100%">
-        <rect width="400" height="533" fill="#1C1A17"/>
-        <defs><radialGradient id="gp" cx="40%" cy="35%" r="70%"><stop offset="0%" stop-color="#C4441A" stop-opacity=".4"/><stop offset="100%" stop-color="#1C1A17" stop-opacity="0"/></radialGradient></defs>
-        <rect width="400" height="533" fill="url(#gp)"/>
-        <circle cx="200" cy="200" r="70" fill="rgba(255,255,255,.06)" stroke="rgba(255,255,255,.1)" stroke-width="1"/>
-        <text x="200" y="205" font-family="serif" font-size="13" fill="rgba(255,255,255,.2)" text-anchor="middle" letter-spacing="2">PHOTO</text>
-      </svg>
-    </div>
-    <div class="about-content">
-      <h2>Alanis Cano</h2>
-      <p class="role">Assistante de Production · Paris</p>
-      <p>Diplômée de [École], je travaille sur des projets cinéma, publicitaires et institutionnels depuis X ans. Rigoureuse et passionnée par la logistique de tournage, je m'adapte aux contraintes de chaque production.</p>
-      <p>J'ai collaboré avec [sociétés / réalisateurs] sur des projets diffusés sur [plateformes / festivals].</p>
-      <p style="margin-top:1.5rem"><a href="mailto:alanis@email.com">alanis@email.com</a></p>
-    </div>
-  </div>
+  <img class="about-photo" src="about-photo.png" alt="Alanis Cano"/>
+  <p class="about-text">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
 </section>
 
 <!-- CONTACT -->
@@ -486,7 +465,7 @@
     if (page) page.classList.add('active');
     const nav = document.getElementById('nav-' + name);
     if (nav) nav.classList.add('active');
-    window.scrollTo(0, 0);
+    window.scrollTo({ top: 0, behavior: 'instant' });
     if (name === 'projets') setTimeout(() => { checkReveal(); checkNavOverImage(); }, 50);
     else document.querySelector('nav').classList.remove('nav-over-image');
     return false;
