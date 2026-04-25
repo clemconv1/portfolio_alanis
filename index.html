@@ -55,12 +55,15 @@
     .section-group{
       position:relative;
     }
+    .section-group + .section-group{
+      margin-top:-20px;
+    }
     .section-header{
       display:flex;
       align-items:baseline;
       justify-content:center;
-      gap:1.2rem;
-      padding:1.5rem 0;
+      gap:.6rem;
+      padding:.3rem 0;
       position:sticky;
       top:0;
       z-index:50;
@@ -77,11 +80,15 @@
     .section-role{
       font-family:'Montserrat',sans-serif;
       font-weight:700;
-      font-size:.85rem;
+      font-size:1.3rem;
       letter-spacing:.05em;
+      text-transform:uppercase;
       color:#2ac2ad;
     }
-    .section-header.over-image .section-title{
+    .section-title.over-image{
+      color:#fff;
+    }
+    .section-role.over-image{
       color:#fff;
     }
 
@@ -216,7 +223,7 @@
 <div class="cascade">
 
   <div class="section-group">
-  <div class="section-header" style="padding-top:5rem"><h2 class="section-title">Konbini</h2><span class="section-role">Assistante de production</span></div>
+  <div class="section-header"><h2 class="section-title">Konbini</h2><span class="section-role">Assistante de Post-Production</span></div>
 
   <div class="gif-strip">
     <div class="gif-track">
@@ -233,7 +240,7 @@
   </div>
 
   <div class="section-group">
-  <div class="section-header"><h2 class="section-title">Caleson</h2><span class="section-role">Assistante de production</span></div>
+  <div class="section-header"><h2 class="section-title">Caleson</h2><span class="section-role">Assistante de Production</span></div>
 
   <!-- 1 pos=0 left -->
   <div class="cascade-item" data-pos="0">
@@ -361,7 +368,7 @@
   </div>
 
   <div class="section-group">
-  <div class="section-header"><h2 class="section-title">Side projects</h2><span class="section-role">Assistante de production</span></div>
+  <div class="section-header"><h2 class="section-title">Side projects</h2><span class="section-role">Assistante de Production</span></div>
 
   <!-- 7 pos=2 right -->
   <div class="cascade-item" data-pos="2">
@@ -442,7 +449,7 @@
     </div>
     <div class="about-content">
       <h2>Alanis Cano</h2>
-      <p class="role">Assistante de production · Paris</p>
+      <p class="role">Assistante de Production · Paris</p>
       <p>Diplômée de [École], je travaille sur des projets cinéma, publicitaires et institutionnels depuis X ans. Rigoureuse et passionnée par la logistique de tournage, je m'adapte aux contraintes de chaque production.</p>
       <p>J'ai collaboré avec [sociétés / réalisateurs] sur des projets diffusés sur [plateformes / festivals].</p>
       <p style="margin-top:1.5rem"><a href="mailto:alanis@email.com">alanis@email.com</a></p>
@@ -593,22 +600,28 @@
     document.documentElement.classList.remove('loading');
   })();
 
+  function isOverImage(el, images, strips) {
+    const r = el.getBoundingClientRect();
+    let over = false;
+    strips.forEach(s => {
+      const sr = s.getBoundingClientRect();
+      if (sr.top < r.bottom && sr.bottom > r.top && sr.left < r.right && sr.right > r.left) over = true;
+    });
+    images.forEach(link => {
+      const lr = link.getBoundingClientRect();
+      if (lr.top < r.bottom && lr.bottom > r.top && lr.left < r.right && lr.right > r.left) over = true;
+    });
+    return over;
+  }
+
   function checkTitleOverImage() {
-    const titles = document.querySelectorAll('#projets-page .section-header');
     const images = document.querySelectorAll('#projets-page .item-link');
     const strips = document.querySelectorAll('#projets-page .gif-strip');
-    titles.forEach(title => {
-      const tr = title.getBoundingClientRect();
-      let over = false;
-      strips.forEach(s => {
-        const sr = s.getBoundingClientRect();
-        if (sr.top < tr.bottom && sr.bottom > tr.top) over = true;
-      });
-      images.forEach(link => {
-        const lr = link.getBoundingClientRect();
-        if (lr.top < tr.bottom && lr.bottom > tr.top && lr.left < tr.right && lr.right > tr.left) over = true;
-      });
-      title.classList.toggle('over-image', over);
+    document.querySelectorAll('#projets-page .section-title').forEach(el => {
+      el.classList.toggle('over-image', isOverImage(el, images, strips));
+    });
+    document.querySelectorAll('#projets-page .section-role').forEach(el => {
+      el.classList.toggle('over-image', isOverImage(el, images, strips));
     });
   }
 
