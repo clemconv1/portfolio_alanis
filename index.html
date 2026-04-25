@@ -4,7 +4,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Alanis Cano</title>
-  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;1,400&family=Jost:wght@300;400&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;1,400&family=Jost:wght@300;400&family=Montserrat:wght@700&display=swap" rel="stylesheet"/>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{--bg:#F8F6F2;--text:#1A1A18;--muted:#888880;--border:#E0DDD7}
@@ -49,6 +49,40 @@
     }
 
     .cascade{position:relative}
+
+    /* ── SECTION TITLES ── */
+    .section-group{
+      position:relative;
+    }
+    .section-header{
+      display:flex;
+      align-items:baseline;
+      justify-content:center;
+      gap:1.2rem;
+      padding:1.5rem 0;
+      position:sticky;
+      top:0;
+      z-index:50;
+      background:transparent;
+      transition:color .35s ease;
+    }
+    .section-title{
+      font-family:'Steriliser',sans-serif;
+      font-size:3.5rem;
+      letter-spacing:.16em;
+      color:var(--text);
+      transition:color .35s ease;
+    }
+    .section-role{
+      font-family:'Montserrat',sans-serif;
+      font-weight:700;
+      font-size:.85rem;
+      letter-spacing:.05em;
+      color:#2ac2ad;
+    }
+    .section-header.over-image .section-title{
+      color:#fff;
+    }
 
     /* ── ITEM LAYOUT ── */
     .cascade-item{
@@ -180,6 +214,9 @@
 
 <div class="cascade">
 
+  <div class="section-group">
+  <div class="section-header" style="padding-top:5rem"><h2 class="section-title">Konbini</h2><span class="section-role">Assistante de production</span></div>
+
   <div class="gif-strip">
     <div class="gif-track">
       <img src="gifs/KONBINIgif5.gif" alt="Projet 5"/>
@@ -191,6 +228,11 @@
       <img src="gifs/KONBINIgif10.gif" alt="Projet 9"/>
     </div>
   </div>
+
+  </div>
+
+  <div class="section-group">
+  <div class="section-header"><h2 class="section-title">Caleson</h2><span class="section-role">Assistante de production</span></div>
 
   <!-- 1 pos=0 left -->
   <div class="cascade-item" data-pos="0">
@@ -315,6 +357,11 @@
     </div>
   </div>
 
+  </div>
+
+  <div class="section-group">
+  <div class="section-header"><h2 class="section-title">Side projects</h2><span class="section-role">Assistante de production</span></div>
+
   <!-- 7 pos=2 right -->
   <div class="cascade-item" data-pos="2">
     <a class="item-link" href="https://vimeo.com/XXXXXXX" target="_blank" rel="noopener">
@@ -374,6 +421,7 @@
       <p class="caption-desc">Tournage sur 3 sites · interviews experts</p>
       <span class="caption-year">2021</span>
     </div>
+  </div>
   </div>
 
 </div>
@@ -503,33 +551,46 @@
 
   // Infinite scroll
   const cascade = document.querySelector('.cascade');
-  const gifStripHTML = cascade.querySelector('.gif-strip').outerHTML;
-  const originalItemsHTML = Array.from(cascade.querySelectorAll('.cascade-item')).map(el => el.outerHTML);
-  const posPattern = [0, 1, 2, 1];
-  let totalItems = originalItemsHTML.length;
+  const originalGroupsHTML = Array.from(cascade.querySelectorAll('.section-group')).map(el => el.outerHTML);
   let cloneCount = 0;
 
   function appendClones() {
     cloneCount++;
     const suffix = '_' + cloneCount;
-    // Append GIF strip clone (duplicate track images for seamless loop)
-    const clonedStrip = gifStripHTML.replace('<div class="gif-track">', '<div class="gif-track">');
-    cascade.insertAdjacentHTML('beforeend', clonedStrip);
-    // Duplicate images inside the newly added track
-    const allTracks = cascade.querySelectorAll('.gif-track');
-    const newTrack = allTracks[allTracks.length - 1];
-    newTrack.insertAdjacentHTML('beforeend', gifTrackOriginalHTML);
 
-    // Append cascade items
-    originalItemsHTML.forEach((html, i) => {
-      const pos = posPattern[(totalItems + i) % posPattern.length];
-      const updated = html
-        .replace(/data-pos="\d+"/, 'data-pos="' + pos + '"')
+    originalGroupsHTML.forEach(groupHTML => {
+      let updated = groupHTML
         .replace(/id="(g\d+)"/g, 'id="$1' + suffix + '"')
         .replace(/url\(#(g\d+)\)/g, 'url(#$1' + suffix + ')');
       cascade.insertAdjacentHTML('beforeend', updated);
     });
-    totalItems += originalItemsHTML.length;
+
+    // Duplicate images inside newly added gif tracks for seamless loop
+    const allTracks = cascade.querySelectorAll('.gif-track');
+    const lastTrack = allTracks[allTracks.length - 1];
+    if (lastTrack && !lastTrack.dataset.duped) {
+      lastTrack.insertAdjacentHTML('beforeend', lastTrack.innerHTML);
+      lastTrack.dataset.duped = '1';
+    }
+  }
+
+  function checkTitleOverImage() {
+    const titles = document.querySelectorAll('#projets-page .section-header');
+    const images = document.querySelectorAll('#projets-page .item-link');
+    const strips = document.querySelectorAll('#projets-page .gif-strip');
+    titles.forEach(title => {
+      const tr = title.getBoundingClientRect();
+      let over = false;
+      strips.forEach(s => {
+        const sr = s.getBoundingClientRect();
+        if (sr.top < tr.bottom && sr.bottom > tr.top) over = true;
+      });
+      images.forEach(link => {
+        const lr = link.getBoundingClientRect();
+        if (lr.top < tr.bottom && lr.bottom > tr.top && lr.left < tr.right && lr.right > tr.left) over = true;
+      });
+      title.classList.toggle('over-image', over);
+    });
   }
 
   function checkInfiniteScroll() {
@@ -546,6 +607,7 @@
       requestAnimationFrame(() => {
         checkReveal();
         checkNavOverImage();
+        checkTitleOverImage();
         checkInfiniteScroll();
         ticking = false;
       });
@@ -557,10 +619,12 @@
   window.addEventListener('load', () => {
     checkReveal();
     checkNavOverImage();
+    checkTitleOverImage();
     animateStrip();
   });
   checkReveal();
   checkNavOverImage();
+  checkTitleOverImage();
 </script>
 </body>
 </html>
