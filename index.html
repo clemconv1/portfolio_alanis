@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" class="loading">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -10,6 +10,7 @@
     :root{--bg:#F8F6F2;--text:#1A1A18;--muted:#888880;--border:#E0DDD7}
     @font-face{font-family:'Steriliser';src:url('Steriliser.otf') format('opentype');font-weight:400;font-style:normal;font-display:swap}
     html{scroll-behavior:smooth}
+    html.loading{opacity:0}
     body{background:var(--bg);color:var(--text);font-family:'Jost',sans-serif;font-weight:300;overflow-x:hidden}
 
     nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;justify-content:space-between;align-items:center;padding:1.2rem 2rem}
@@ -554,25 +555,43 @@
   const originalGroupsHTML = Array.from(cascade.querySelectorAll('.section-group')).map(el => el.outerHTML);
   let cloneCount = 0;
 
+  function makeGroupsHTML(suffix) {
+    return originalGroupsHTML.map(groupHTML =>
+      groupHTML
+        .replace(/id="(g\d+)"/g, 'id="$1' + suffix + '"')
+        .replace(/url\(#(g\d+)\)/g, 'url(#$1' + suffix + ')')
+    ).join('');
+  }
+
+  function dupGifTracks(container) {
+    container.querySelectorAll('.gif-track').forEach(track => {
+      if (!track.dataset.duped) {
+        track.insertAdjacentHTML('beforeend', track.innerHTML);
+        track.dataset.duped = '1';
+      }
+    });
+  }
+
   function appendClones() {
     cloneCount++;
-    const suffix = '_' + cloneCount;
-
-    originalGroupsHTML.forEach(groupHTML => {
-      let updated = groupHTML
-        .replace(/id="(g\d+)"/g, 'id="$1' + suffix + '"')
-        .replace(/url\(#(g\d+)\)/g, 'url(#$1' + suffix + ')');
-      cascade.insertAdjacentHTML('beforeend', updated);
-    });
-
-    // Duplicate images inside newly added gif tracks for seamless loop
-    const allTracks = cascade.querySelectorAll('.gif-track');
-    const lastTrack = allTracks[allTracks.length - 1];
-    if (lastTrack && !lastTrack.dataset.duped) {
-      lastTrack.insertAdjacentHTML('beforeend', lastTrack.innerHTML);
-      lastTrack.dataset.duped = '1';
-    }
+    cascade.insertAdjacentHTML('beforeend', makeGroupsHTML('_' + cloneCount));
+    dupGifTracks(cascade);
   }
+
+  // Prepend content once on load so there's always content above
+  (function initialPrepend() {
+    for (let i = 1; i <= 3; i++) {
+      cloneCount++;
+      cascade.insertAdjacentHTML('afterbegin', makeGroupsHTML('_p' + cloneCount));
+    }
+    dupGifTracks(cascade);
+    // Scroll past the prepended content, then reveal
+    const originalFirst = cascade.querySelector('.section-group:nth-child(10)');
+    if (originalFirst) {
+      window.scrollTo({ top: originalFirst.offsetTop, behavior: 'instant' });
+    }
+    document.documentElement.classList.remove('loading');
+  })();
 
   function checkTitleOverImage() {
     const titles = document.querySelectorAll('#projets-page .section-header');
@@ -593,11 +612,27 @@
     });
   }
 
+  let prependLock = false;
+
   function checkInfiniteScroll() {
     if (!document.getElementById('projets-page').classList.contains('active')) return;
     const rect = cascade.getBoundingClientRect();
     const distanceToBottom = rect.bottom - window.innerHeight;
     if (distanceToBottom < 500) appendClones();
+
+    if (window.scrollY < 800 && !prependLock) {
+      prependLock = true;
+      const scrollBefore = window.scrollY;
+      const heightBefore = cascade.scrollHeight;
+      for (let i = 0; i < 3; i++) {
+        cloneCount++;
+        cascade.insertAdjacentHTML('afterbegin', makeGroupsHTML('_p' + cloneCount));
+      }
+      dupGifTracks(cascade);
+      const heightAfter = cascade.scrollHeight;
+      window.scrollTo({ top: scrollBefore + (heightAfter - heightBefore), behavior: 'instant' });
+      setTimeout(() => { prependLock = false; }, 100);
+    }
   }
 
   // Scroll listener
